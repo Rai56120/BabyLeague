@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+model Player {
+  id                  Int           @id @default(autoincrement())
+  name                String
+  createdAt           DateTime      @default(now())
+  goalsConcededWhite  Int           @default(0)
+  goalsConcededBlack  Int           @default(0)
+  goalsScoredWhite    Int           @default(0)
+  goalsScoredBlack    Int           @default(0)
+  playerOfTheMatch    Int           @default(0)
+  gamellesScored      Int           @default(0)
+  ownGoalsScored      Int           @default(0)
+  fannysScored        Int           @default(0)
+  fannysEndured       Int           @default(0)
+  matches             MatchPlayer[]
+
+  @@index([name])
+}
+
+model Match {
+  id                  Int           @id @default(autoincrement())
+  date                DateTime      @default(now())
+  whiteTeamScore      Int
+  blackTeamScore      Int
+  createdAt           DateTime      @default(now())
+  players             MatchPlayer[]
+
+  @@index([date])
+}
+
+model MatchPlayer {
+  id                  Int    @id @default(autoincrement())
+  matchId             Int
+  playerId            Int
+  team                Boolean
+  gamellesScored      Int
+  ownGoalScored       Int
+  isPlayerOfTheMatch  Boolean
+  match               Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player              Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, playerId])
+  @@index([playerId])
+  @@index([matchId])
+  @@index([team])
+}
