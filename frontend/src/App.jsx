@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const API_PLAYERS_URL = 'http://localhost:5000/api/players'; // Adjust if deployed
+
+// Frontend
+const FRONTEND_URL = 'http://localhost:';
+const BACKEND_PORT = 5000;
+const API_PLAYERS = '/api/players'; // Adjust if deployed
+const API_PLAYERS_URL = FRONTEND_URL + BACKEND_PORT + API_PLAYERS;
 
 function App() {
   const [players, setPlayers] = useState([]);
