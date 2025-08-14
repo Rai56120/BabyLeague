@@ -347,7 +347,7 @@ app.delete('/api/matches/:id', asyncHandler(async (req, res) => {
 // Match player routes (for individual match-player relationships)
 
 // Update match player stats
-app.put('api/match-players/:matchId/:playerId', asyncHandler(async (req, res) => {
+app.put('/api/match-players/:matchId/:playerId', asyncHandler(async (req, res) => {
     const { matchId, playerId } = req.params;
     const updateData = req.body;
 
@@ -402,6 +402,17 @@ app.delete('/api/match-players/:matchId/:playerId', asyncHandler(async (req, res
 
 // Statistics routes
 
+// Get player leaderboard
+app.get('/api/stats/leaderboard', asyncHandler(async (req, res) => {
+    const players = await prisma.player.findMany({
+        orderBy: [
+            { playerOfTheMatch: 'desc' },
+            { gamellesScored: 'desc' }
+        ]
+    });
+
+    res.json(players);
+}));
 
 
 
