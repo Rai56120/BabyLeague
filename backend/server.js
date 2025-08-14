@@ -84,7 +84,7 @@ app.post('/api/players', asyncHandler(async (req, res) => {
 }));
 
 // Update an existing player fields
-app.put('/api/players/:id', asyncHandler(async (res, req) => {
+app.put('/api/players/:id', asyncHandler(async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
     
@@ -143,10 +143,139 @@ app.get('/api/matches', asyncHandler(async (req, res) => {
 }));
 
 // Get match by id
+app.get('/api/matches/:id', asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    const match = await prisma.match.findUnique({
+        where: {
+            id: parseInt(id),
+        },
+        include: {
+            players: {
+                include: {
+                    player: true
+                }
+            }
+        }
+    });
+
+    if (!match) {
+        return res.status(404).json({ error: 'Match not found' });
+    }
+    res.json(match);
+}));
+
+// Create new match with players and update players stats
+app.post('/api/matches', asyncHandler(async (req, res) => {
+    const { whiteTeamScore, blackTeamScore, players, date } = req.body;
+
+    const isInvalidScore = (score) => score === undefined || score === null || typeof score !== 'number';
+    const isInvalidPlayers = !players || !Array.isArray(players);
+
+    if (isInvalidScore(whiteTeamScore) || isInvalidScore(blackTeamScore) || isInvalidPlayers) {
+        return res.status(400).json({ error: 'Invalid match data' });
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+        // Create the match
+        const match = await tx.match.create({
+            data: {
+                whiteTeamScore,
+                blackTeamScore,
+                date: date ? new Date(date) : new Date()
+            }
+        });
+
+        //Create MatchPlayer entries
+        const matchPlayerData = players.map(player => ({
+            matchId: match.id,
+            playerId: player.playerId,
+            team: player.team,
+            gamellesScored: player.gamellesScored || 0,
+            ownGoalScored: player.ownGoalScored || 0,
+            isPlayerOfTheMatch: player.isPlayerOfTheMatch || false
+        }));
+
+        await tx.matchPlayer.createMany({
+            data: matchPlayerData
+        });
+
+        // Update player aggregate stats
+        for (const player of players) {
+            const isWhiteTeam = player.team;
+            const isWinner = (isWhiteTeam && whiteTeamScore > blackTeamScore) ||
+                (!isWhiteTeam && blackTeamScore > whiteTeamScore);
+            
+            const updateData = {
+                gamellesScored: { increment: player.gamellesScored || 0 },
+                ownGoalScored: { increment: player.ownGoalScored || 0 }
+            };
+
+            // Update goals scored/concerned
+            if (isWhiteTeam) {
+                updateData.goalsScoredWhite = { increment: whiteTeamScore };
+                updateData.goalsConcededWhite = { increment: blackTeamScore };
+            } else {
+                updateData.goalsScoredBlack = { increment: blackTeamScore };
+                updateData.goalsConcededBlack = { increment: whiteTeamScore };
+            }
+
+            // Update player of the match count
 
 
+            await tx.player.update({
+                where: { id: player.playerId },
+                data: updateData
+            });
+        }
 
+        return match;
+    });
 
+    // Fetch the complete match with players
+    const completeMatch = await prisma.match.findUnique({
+        where: { id: player.playerId },
+        include: {
+            players: {
+                player: true
+            }
+        }
+    });
+
+    res.status(201).json(completeMatch);
+}));
+
+// Update match
+app.put('/api/matches/:id', asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { whiteTeamScore, blackTeamScore, date } = req.body;
+
+    try {
+        const match = await prisma.match.update({
+            where: { id: parseInt(id) },
+            data: {
+                whiteTeamScore,
+                blackTeamScore,
+                date: date ? new Date(date) : undefined
+        },
+            include: {
+                players: {
+                    include: {
+                        player: true
+                    }
+                }
+            }
+        });
+
+        res.json(match);
+    } catch (error) {
+        if (error.code === 'P2025') {
+            return res.status(404).json({ error: 'Match not found' });
+        }
+
+        throw error;
+    }
+}));
 
 
 
