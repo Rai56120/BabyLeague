@@ -126,6 +126,39 @@ app.delete('/api/players/:id', asyncHandler(async (req, res) => {
 
 // Match routes
 
+// Get all matches
+app.get('/api/matches', asyncHandler(async (req, res) => {
+    const matches = await prisma.match.findMany({
+        orderBy: { date: 'asc' },
+        include: {
+            players: {
+                include: {
+                    player: true
+                }
+            }
+        }
+    });
+
+    res.json(matches);
+}));
+
+// Get match by id
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /*
