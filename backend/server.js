@@ -103,7 +103,25 @@ app.put('/api/players/:id', asyncHandler(async (res, req) => {
     }
 }));
 
+// Delete player
+app.delete('/api/players/:id', asyncHandler(async (req, res) => {
+    const { id } = req.params;
 
+    try {
+        const player = await prisma.player.delete({
+            where: {
+                id: parseInt(id)
+            }
+        });
+
+        res.status(204).json(player);
+    } catch (error) {
+        if (error.code === 'P2025') {
+            return res.status(404).json({ error: 'Player not found' });
+        }
+        throw error;
+    }
+}));
 
 
 
