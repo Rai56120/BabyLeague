@@ -277,7 +277,71 @@ app.put('/api/matches/:id', asyncHandler(async (req, res) => {
     }
 }));
 
+// Delete match and update player stats
+app.delete('/api/matches/:id', asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        await prisma.$transaction(async (tx) => {
+            const match = tx.match.findUnique({
+                where: { id: parseInt(id) },
+                include: {
+                    players: {
+                        include: {
+                            player: true
+                        }
+                    }
+                }
+            });
 
+            if (!match) {
+                throw new Error('Match not found');
+            }
+
+            // Reverse the personnal stats for each player
+            for (const matchPlayer of match.players) {
+                const isWhiteTeam = matchPlayer.team;
+
+                const updateData = {
+                    gamellesScored: { decrement: matchPlayer.gamellesScored },
+                    ownGoalScored: { decrement: matchPlayer.ownGoalScored }
+                }
+
+                // Reverse goals scored/conceded based on team
+                if (isWhiteTeam) {
+                    updateData.goalsScoredWhite = { decrement: match.whiteTeamScore };
+                    updateData.goalsConcededWhite = { decrement: match.blackTeamScore };
+                } else {
+                    updateData.goalsScoredBlack = { decrement: match.blackTeamScore };
+                    updateData.goalsConcededBlack = { decrement: match.whiteTeamScore };
+                }
+
+                // Reverse player of the match count
+                if (matchPlayer.isPlayerOfTheMatch) {
+                    updateData.isPlayerOfTheMatch = { decrement: 1 };
+                }
+
+                await tx.player.update({
+                    where: { id: matchPlayer.playerId },
+                    data: updateData
+                });
+            }
+
+            // Delete the match (MatchPlayer entries are deleted automatically due to CASCADE)
+            await tx.match.delete({
+                where: { id: parseInt(id) },
+                data: updateData
+            });
+        });
+
+        res.status(204).send();
+    } catch (error) {
+        if (error.message === 'Match not found' || error.code === 'P2025') {
+            return res.status(404).json({ error: 'Match not found' });
+        }
+        throw error;
+    }
+}));
 
 
 
