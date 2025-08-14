@@ -344,6 +344,38 @@ app.delete('/api/matches/:id', asyncHandler(async (req, res) => {
 }));
 
 
+// Match player routes (for individual match-player relationships)
+
+// Update match player stats
+app.put('api/match-players/:matchId/:playerId', asyncHandler(async (req, res) => {
+    const { matchId, playerId } = req.params;
+    const updateData = req.body;
+
+    try {
+        const matchPlayer = await prisma.matchPlayer.update({
+            where: {
+                matchId_playerId: {
+                    matchId: parseInt(matchId),
+                    playerId: parseInt(playerId)
+                }
+            },
+            data: updateData,
+            include: {
+                player: true,
+                match: true
+            }
+        });
+
+        res.json(matchPlayer);
+    } catch (error) {
+        if (error.code === ('P2025')) {
+            return res.status(404).json({ error: 'Match player relationship not found' });
+        }
+
+        throw error;
+    }
+}));
+
 
 
 
