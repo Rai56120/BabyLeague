@@ -376,7 +376,29 @@ app.put('api/match-players/:matchId/:playerId', asyncHandler(async (req, res) =>
     }
 }));
 
+// Delete match player (remove player from match)
+app.delete('/api/match-players/:matchId/:playerId', asyncHandler(async (req, res) => {
+    const { matchId, playerId } = req.params;
 
+    try {
+        await prisma.matchPlayer.delete({
+            where: {
+                matchId_playerId: {
+                    matchId: parseInt(matchId),
+                    playerId: parseInt(playerId)
+                }
+            }
+        });
+
+        res.status(204).send();
+    } catch (error) {
+        if (error.code === 'P2025') {
+            return res.status(404).json({ error: 'Match player relationship not found' });
+        }
+
+        throw error;
+    }
+}));
 
 
 
