@@ -11,10 +11,10 @@ const PORT = process.env.BACKEND_PORT || 5000;
 // --------------------------------------------------
 // ------------------- Middleware -------------------
 // --------------------------------------------------
-app.use(cors({
+app.use(cors({      // Cors allows the communication between frontend and backend
     origin: process.env.FRONTEND_URL + process.env.FRONTEND_PORT || 'http://localhost:5173/',
     credentials: true
-}));                                                            // Cors allows the communication between frontend and backend
+}));
 
 app.use(express.json());                                        // Parse incoming JSON bodies into req.body
 
@@ -53,11 +53,10 @@ app.get('/api/players', asyncHandler(async (req, res) => {
 }));
 
 // Get a player by name
-app.get('/api/players/:name', asyncHandler(async (req, res) => {
-    const { name } = req.params;
-    const players = await prisma.player.findMany({
-        orderBy: { id: 'asc' },
-        where: { name: name },
+app.get('/api/players/:id', asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const players = await prisma.player.findUnique({
+        where: { id: parseInt(id) },
         include: {
             matches: {
                 include: {
@@ -199,7 +198,7 @@ app.post('/api/matches', asyncHandler(async (req, res) => {
             playerId: player.playerId,
             team: player.team,
             gamellesScored: player.gamellesScored || 0,
-            ownGoalScored: player.ownGoalScored || 0,
+            ownGoalsScored: player.ownGoalsScored || 0,
             isPlayerOfTheMatch: player.isPlayerOfTheMatch || false
         }));
 
@@ -215,7 +214,7 @@ app.post('/api/matches', asyncHandler(async (req, res) => {
             
             const updateData = {
                 gamellesScored: { increment: player.gamellesScored || 0 },
-                ownGoalScored: { increment: player.ownGoalScored || 0 }
+                ownGoalsScored: { increment: player.ownGoalsScored || 0 }
             };
 
             // Update goals scored/concerned
@@ -241,10 +240,12 @@ app.post('/api/matches', asyncHandler(async (req, res) => {
 
     // Fetch the complete match with players
     const completeMatch = await prisma.match.findUnique({
-        where: { id: player.playerId },
+        where: { id: result.id },
         include: {
             players: {
-                player: true
+                include: {
+                    player: true
+                }
             }
         }
     });
@@ -305,32 +306,32 @@ app.delete('/api/matches/:id', asyncHandler(async (req, res) => {
                 throw new Error('Match not found');
             }
 
-            // Reverse the personnal stats for each player
+            // Reverse the stats for each player
             for (const matchPlayer of match.players) {
                 const isWhiteTeam = matchPlayer.team;
-
+                
                 const updateData = {
-                    gamellesScored: { decrement: matchPlayer.gamellesScored },
-                    ownGoalScored: { decrement: matchPlayer.ownGoalScored }
-                }
-
+                gamellesScored: { decrement: matchPlayer.gamellesScored },
+                ownGoalsScored: { decrement: matchPlayer.ownGoalsScored }
+                };
+                
                 // Reverse goals scored/conceded based on team
                 if (isWhiteTeam) {
-                    updateData.goalsScoredWhite = { decrement: match.whiteTeamScore };
-                    updateData.goalsConcededWhite = { decrement: match.blackTeamScore };
+                updateData.goalsScoredWhite = { decrement: match.whiteTeamScore };
+                updateData.goalsConcededWhite = { decrement: match.blackTeamScore };
                 } else {
-                    updateData.goalsScoredBlack = { decrement: match.blackTeamScore };
-                    updateData.goalsConcededBlack = { decrement: match.whiteTeamScore };
+                updateData.goalsScoredBlack = { decrement: match.blackTeamScore };
+                updateData.goalsConcededBlack = { decrement: match.whiteTeamScore };
                 }
-
+                
                 // Reverse player of the match count
                 if (matchPlayer.isPlayerOfTheMatch) {
-                    updateData.isPlayerOfTheMatch = { decrement: 1 };
+                updateData.playerOfTheMatch = { decrement: 1 };
                 }
-
+                
                 await tx.player.update({
-                    where: { id: matchPlayer.playerId },
-                    data: updateData
+                where: { id: matchPlayer.playerId },
+                data: updateData
                 });
             }
 

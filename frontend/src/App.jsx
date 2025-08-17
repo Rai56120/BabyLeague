@@ -1,80 +1,55 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-
-const API_PLAYERS_URL = 'http://localhost:5000/api/players'; // Adjust if deployed
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import PlayersPage from './pages/PlayersPage';
+import AddMatchPage from './pages/AddMatchPage';
+import MatchDetailsPage from './pages/MatchDetailsPage';
+import PlayerStatsPage from './pages/PlayerStatsPage';
+import RecentMatchesPage from './pages/RecentMatchesPage';
+import './App.css';
 
 function App() {
-  const [players, setPlayers] = useState([]);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
-
-  // Fetch all players
-  const fetchPlayers = async () => {
-    try {
-      const res = await axios.get(API_PLAYERS_URL);
-      setPlayers(res.data);
-    } catch (err) {
-      console.error(err);
-      setError('Failed to load players');
-    }
-  };
-
-  // Handle form submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    try {
-      await axios.post(API_PLAYERS_URL, { name });
-      setName('');
-      fetchPlayers(); // Refresh list after adding
-    } catch (err) {
-      if (err.response?.data?.error) {
-        setError(err.response.data.error);
-      } else {
-        setError('Failed to add player');
-      }
-    }
-  };
-
-  // Load players on page load
-  useEffect(() => {
-    fetchPlayers();
-  }, []);
-
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
-      <h1>Players</h1>
+    <Router>
+      <div className="App">
+        <nav className="navbar">
+          <div className="nav-container">
+            <Link to="/" className="nav-logo">
+              ⚽ Table Football
+            </Link>
+            <ul className="nav-menu">
+              <li className="nav-item">
+                <Link to="/" className="nav-link">
+                  Recent Matches
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link to="/players" className="nav-link">
+                  Players
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link to="/add-match" className="nav-link">
+                  Add Match
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </nav>
 
-      {/* Error message */}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      {/* Add player form */}
-      <form onSubmit={handleSubmit} style={{ marginBottom: '1rem' }}>
-        <input
-          type="text"
-          placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          style={{ marginRight: '0.5rem' }}
-        />
-        <button type="submit">Create Player</button>
-
-        <button type="submit">Delete Player</button>
-      </form>
-
-      {/* Player list */}
-      <ul>
-        {players.map((u) => (
-          <li key={u.id}>
-            {u.name}....
-            {u.matches}
-          </li>
-        ))}
-      </ul>
-    </div>
+        <main className="main-content">
+          <Routes>
+            <Route path="/" element={<RecentMatchesPage />} />
+            <Route path="/players" element={<PlayersPage />} />
+            <Route path="/add-match" element={<AddMatchPage />} />
+            <Route path="/match/:id" element={<MatchDetailsPage />} />
+            <Route path="/player/:id" element={<PlayerStatsPage />} />
+          </Routes>
+        </main>
+      </div>
+      <div>
+        Hello wrld
+      </div>
+    </Router>
   );
 }
 
