@@ -46,6 +46,9 @@ function App() {
           </Routes>
         </main>
       </div>
+      <div>
+        Hello wrld
+      </div>
     </Router>
   );
 }

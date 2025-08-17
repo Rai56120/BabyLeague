@@ -57,7 +57,7 @@ const AddMatchPage = () => {
         const playerWithStats = {
             ...player,
             gamellesScored: 0,
-            ownGoalScored: 0,
+            ownGoalsScored: 0,
             isPlayerOfTheMatch: false
         };
 
@@ -124,14 +124,14 @@ const AddMatchPage = () => {
                     playerId: player.id,
                     team: true,
                     gamellesScored: parseInt(player.gamellesScored) || 0,
-                    ownGoalScored: parseInt(player.ownGoalScored) || 0,
+                    ownGoalsScored: parseInt(player.ownGoalsScored) || 0,
                     isPlayerOfTheMatch: player.isPlayerOfTheMatch || false
                 })),
                 ...blackTeamPlayers.map(player => ({
                     playerId: player.id,
                     team: false,
                     gamellesScored: parseInt(player.gamellesScored) || 0,
-                    ownGoalScored: parseInt(player.ownGoalScored) || 0,
+                    ownGoalsScored: parseInt(player.ownGoalsScored) || 0,
                     isPlayerOfTheMatch: player.isPlayerOfTheMatch || false
                 }))
             ]
@@ -299,8 +299,8 @@ const AddMatchPage = () => {
                                             <label style={{ fontSize: '0.9rem', color: '#555' }}>Own Goals</label>
                                             <input
                                                 type="number"
-                                                value={player.ownGoalScored}
-                                                onChange={(e) => updatePlayerStat(player.id, 'white', 'ownGoalScored', e.target.value)}
+                                                value={player.ownGoalsScored}
+                                                onChange={(e) => updatePlayerStat(player.id, 'white', 'ownGoalsScored', e.target.value)}
                                                 min="0"
                                                 style={{ padding: '0.5rem', fontSize: '0.9rem' }}
                                                 className="form-input"
@@ -363,8 +363,8 @@ const AddMatchPage = () => {
                                             <label style={{ fontSize: '0.9rem', color: '#ccc' }}>Own Goals</label>
                                             <input
                                                 type="number"
-                                                value={player.ownGoalScored}
-                                                onChange={(e) => updatePlayerStat(player.id, 'black', 'ownGoalScored', e.target.value)}
+                                                value={player.ownGoalsScored}
+                                                onChange={(e) => updatePlayerStat(player.id, 'black', 'ownGoalsScored', e.target.value)}
                                                 min="0"
                                                 style={{ padding: '0.5rem', fontSize: '0.9rem' }}
                                                 className="form-input"

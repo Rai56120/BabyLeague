@@ -65,7 +65,7 @@ const RecentMatchesPage = () => {
     };
 
     const getTotalOwnGoals = (match) => {
-        return match.players.reduce((sum, mp) => sum + mp.ownGoalScored, 0);
+        return match.players.reduce((sum, mp) => sum + mp.ownGoalsScored, 0);
     };
 
     const getTeamPlayers = (match, isWhiteTeam) => {
@@ -252,7 +252,7 @@ const RecentMatchesPage = () => {
                                                         {mp.isPlayerOfTheMatch && <span style={{ color: '#ffc107', marginLeft: '0.5rem' }}>⭐</span>}
                                                     </Link>
                                                     <span style={{ color: '#666', fontSize: '0.8rem' }}>
-                                                        G:{mp.gamellesScored} OG:{mp.ownGoalScored}
+                                                        G:{mp.gamellesScored} OG:{mp.ownGoalsScored}
                                                     </span>
                                                 </div>
                                             ))}
@@ -279,7 +279,7 @@ const RecentMatchesPage = () => {
                                                         {mp.isPlayerOfTheMatch && <span style={{ color: '#ffc107', marginLeft: '0.5rem' }}>⭐</span>}
                                                     </Link>
                                                     <span style={{ color: '#ccc', fontSize: '0.8rem' }}>
-                                                        G:{mp.gamellesScored} OG:{mp.ownGoalScored}
+                                                        G:{mp.gamellesScored} OG:{mp.ownGoalsScored}
                                                     </span>
                                                 </div>
                                             ))}

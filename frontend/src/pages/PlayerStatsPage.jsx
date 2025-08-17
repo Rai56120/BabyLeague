@@ -327,7 +327,7 @@ const PlayerStatsPage = () => {
                                                 {result}
                                             </div>
                                             <div style={{ fontSize: '0.8rem', color: '#666' }}>
-                                                G: {match.playerStats.gamellesScored} | OG: {match.playerStats.ownGoalScored}
+                                                G: {match.playerStats.gamellesScored} | OG: {match.playerStats.ownGoalsScored}
                                                 {match.playerStats.isPlayerOfTheMatch && <span style={{ color: '#ffc107', marginLeft: '0.5rem' }}>⭐</span>}
                                             </div>
                                         </div>

@@ -102,7 +102,7 @@ const MatchDetailsPage = () => {
     const blackTeamPlayers = getTeamPlayers(false);
     const playerOfTheMatch = getPlayerOfTheMatch();
     const totalGamelles = match.players.reduce((sum, mp) => sum + mp.gamellesScored, 0);
-    const totalOwnGoals = match.players.reduce((sum, mp) => sum + mp.ownGoalScored, 0);
+    const totalOwnGoals = match.players.reduce((sum, mp) => sum + mp.ownGoalsScored, 0);
 
     return (
         <div className="page-container">
@@ -261,7 +261,7 @@ const MatchDetailsPage = () => {
 
                                 <div className="stat-item" style={{ padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
                                     <span className="stat-label">Own Goals:</span>
-                                    <span className="stat-value">{matchPlayer.ownGoalScored}</span>
+                                    <span className="stat-value">{matchPlayer.ownGoalsScored}</span>
                                 </div>
                             </div>
                         </div>
@@ -312,7 +312,7 @@ const MatchDetailsPage = () => {
 
                                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #6c757d' }}>
                                     <span style={{ color: '#ccc' }}>Own Goals:</span>
-                                    <span style={{ color: 'white', fontWeight: 'bold' }}>{matchPlayer.ownGoalScored}</span>
+                                    <span style={{ color: 'white', fontWeight: 'bold' }}>{matchPlayer.ownGoalsScored}</span>
                                 </div>
                             </div>
                         </div>
