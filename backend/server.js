@@ -11,10 +11,10 @@ const PORT = process.env.BACKEND_PORT || 5000;
 // --------------------------------------------------
 // ------------------- Middleware -------------------
 // --------------------------------------------------
-app.use(cors({
+app.use(cors({      // Cors allows the communication between frontend and backend
     origin: process.env.FRONTEND_URL + process.env.FRONTEND_PORT || 'http://localhost:5173/',
     credentials: true
-}));                                                            // Cors allows the communication between frontend and backend
+}));
 
 app.use(express.json());                                        // Parse incoming JSON bodies into req.body
 
