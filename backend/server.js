@@ -8,6 +8,9 @@ const app = express();                                          // Create a Expr
 const prisma = new PrismaClient();                              // Create a prisma client to connect to the DB
 const PORT = process.env.BACKEND_PORT || 5000;
 
+// --------------------------------------------------
+// ------------------- Middleware -------------------
+// --------------------------------------------------
 app.use(cors({
     origin: process.env.FRONTEND_URL + process.env.FRONTEND_PORT || 'http://localhost:5173/',
     credentials: true
@@ -30,7 +33,9 @@ app.get('/api/health', (req, res) => {
 });
 
 
-// Player routes
+// ---------------------------------------------------
+// ------------------ Player routes ------------------
+// ---------------------------------------------------
 
 // Get all players
 app.get('/api/players', asyncHandler(async (req, res) => {
@@ -124,7 +129,9 @@ app.delete('/api/players/:id', asyncHandler(async (req, res) => {
 }));
 
 
-// Match routes
+// --------------------------------------------------
+// ------------------ Match routes ------------------
+// --------------------------------------------------
 
 // Get all matches
 app.get('/api/matches', asyncHandler(async (req, res) => {
@@ -343,8 +350,9 @@ app.delete('/api/matches/:id', asyncHandler(async (req, res) => {
     }
 }));
 
-
-// Match player routes (for individual match-player relationships)
+// ---------------------------------------------------------------------
+// -- Match player routes (for individual match-player relationships) --
+// ---------------------------------------------------------------------
 
 // Update match player stats
 app.put('/api/match-players/:matchId/:playerId', asyncHandler(async (req, res) => {
@@ -400,7 +408,9 @@ app.delete('/api/match-players/:matchId/:playerId', asyncHandler(async (req, res
     }
 }));
 
-// Statistics routes
+// ---------------------------------------------------
+// ---------------- Statistics routes ----------------
+// ---------------------------------------------------
 
 // Get player leaderboard
 app.get('/api/stats/leaderboard', asyncHandler(async (req, res) => {
@@ -414,46 +424,81 @@ app.get('/api/stats/leaderboard', asyncHandler(async (req, res) => {
     res.json(players);
 }));
 
-
-
-
-
-
-/*
-// GET /api/users -> return all users from the database
-app.get('/api/players', async (req, res) => {                   // Declare an async route handler
-    try {
-        const players = await prisma.player.findMany();
-        res.json(players);                                        // Send them back as JSON
-    } catch (err) {
-        console.error('Error fetching players:', err);
-        res.status(500).json({ error: 'Failed to fetch players' });
-    }
-});
-
-// POST /api/players -> create a new user
-app.post('/api/players', async (req, res) => {                    // Another async route handler
-    const { name } = req.body;
-
-    // Simple validation
-    if (!name) {
-        return res.status(400).json({ error: 'Name is required' });
-    }
-
-    try {
-        const newPlayer = await prisma.player.create({
-        data: { name }
-        });
-        res.status(201).json(newPlayer); // 201 = Created
-    } catch (err) {
-        // Prisma error for duplicate email
-        if (err.code === 'P2002') {
-            return res.status(409).json({ error: 'Player already exists' }); // 409 = Conflict
+// Get match statistics
+app.get('/api/stats/matches', asyncHandler(async (req, res) => {
+    const totalMatches = await prisma.match.count();
+    const recentMatches = await prisma.match.findMany({
+        take: 10,
+        orderBy: { date: 'desc' },
+        include: {
+            players: {
+                include: {
+                    player: true
+                }
+            }
         }
-        console.error('Error creating player:', err);
-        res.status(500).json({ error: 'Failed to create player' });
+    });
+
+    res.json({
+        totalMatches,
+        recentMatches
+    });
+}));
+
+// ---------------------------------------------------
+// ------------ Error handling middleware ------------
+// ---------------------------------------------------
+app.use((error, req, res, next) => {
+    console.error('Error', error);
+
+    // Log additional details in development
+    if (process.env.NODE_ENV === 'development') {
+        console.error('Stack trace:', error.stack);
+    }
+
+    res.status(500).json({
+        error: 'Internal server error',
+        ...(process.env.NODE_ENV === 'development' && { details: error.message })
+    });
+});
+
+// 404 handler
+app.use((req, res) => {
+    res.status(404).json({ error: 'route not found' });
+});
+
+// Start server
+app.listen(process.env.BACKEND_PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🌐 CORS origin: ${process.env.FRONTEND_URL + process.env.FRONTEND_PORT || 'http://localhost:3000'}`);
+
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
     }
 });
-*/
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Graceful shutdown
+const gracefulShutdown = async () => {
+    console.log('🛑 Shutting down server...');
+
+    try {
+        await prisma.$disconnect();
+        console.log('✅ Database connection closed');
+    } catch (error) {
+        console.error('❌ Error closing database connection:', error);
+    }
+
+    process.exit();
+};
+
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
+
+// Handle unhandled promise rejecctions
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    if (process.env.NODE_ENV === 'production') {
+        gracefulShutdown();
+    }
+});
