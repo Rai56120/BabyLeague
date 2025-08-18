@@ -52,7 +52,7 @@ app.get('/api/players', asyncHandler(async (req, res) => {
     res.json(players);
 }));
 
-// Get a player by name
+// Get a player by id
 app.get('/api/players/:id', asyncHandler(async (req, res) => {
     const { id } = req.params;
     const players = await prisma.player.findUnique({
@@ -77,14 +77,27 @@ app.get('/api/players/:id', asyncHandler(async (req, res) => {
 app.post('/api/players', asyncHandler(async (req, res) => {
     const { name } = req.body;
     // We verify that there is a name 
-    if (!name) {
-        return res.status(400).json({ error: 'Player not found' });
+    if (!name || name.trim() === '') {
+        return res.status(400).json({ error: 'Player name is required' });
     }
-    const player = await prisma.player.create({
-        data: { name }
-    })
+    try {
+        const player = await prisma.player.create({
+            data: { name: name.trim() }
+        });
 
-    res.status(201).json(player);
+        res.status(201).json(player);
+    } catch (error) {
+        if (error.code === 'P2002') {
+            return res.status(409).json({
+                error: 'A player with this name already exists',
+                field: 'name'
+            });
+        }
+
+        throw error;
+    }
+    
+
 }));
 
 // Update an existing player fields
@@ -92,6 +105,10 @@ app.put('/api/players/:id', asyncHandler(async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
     
+    if (updateData.name) {
+        updateData.name = updateData.name.trim();
+    }
+
     try {
         const player = await prisma.player.update({
             where: { id: parseInt(id) },
@@ -99,7 +116,13 @@ app.put('/api/players/:id', asyncHandler(async (req, res) => {
         });
         res.json(player);
     } catch (error) {
-        if (error.code('P2025')) {
+        if (error.code === 'P2002') {
+            return res.status(409).json({
+                error: 'A player with this name already exists',
+                field: 'name'
+            });
+        }
+        if (error.code === 'P2025') {
             return res.status(404).json({ error: 'Player not found' });
         }
 
@@ -173,6 +196,7 @@ app.get('/api/matches/:id', asyncHandler(async (req, res) => {
 
 // Create new match with players and update players stats
 app.post('/api/matches', asyncHandler(async (req, res) => {
+
     const { whiteTeamScore, blackTeamScore, players, date } = req.body;
 
     const isInvalidScore = (score) => score === undefined || score === null || typeof score !== 'number';
@@ -227,7 +251,9 @@ app.post('/api/matches', asyncHandler(async (req, res) => {
             }
 
             // Update player of the match count
-
+            if (player.isPlayerOfTheMatch) {
+                updateData.playerOfTheMatch = { increment: 1 };
+            }
 
             await tx.player.update({
                 where: { id: player.playerId },
@@ -288,65 +314,82 @@ app.put('/api/matches/:id', asyncHandler(async (req, res) => {
 // Delete match and update player stats
 app.delete('/api/matches/:id', asyncHandler(async (req, res) => {
     const { id } = req.params;
-    
+    const matchId = parseInt(id);
+
+    if (isNaN(matchId)) {
+        return res.status(400).json({ error: 'Invalid match ID' });
+    }
+
     try {
+        // Reverse the stats for each player
         await prisma.$transaction(async (tx) => {
-            const match = tx.match.findUnique({
-                where: { id: parseInt(id) },
-                include: {
-                    players: {
-                        include: {
-                            player: true
-                        }
-                    }
-                }
+            // Get basic match info
+            const match = await tx.match.findUnique({
+                where: { id: matchId }
             });
 
             if (!match) {
                 throw new Error('Match not found');
             }
 
+            // Get players separately to avoid the function issue
+            const matchPlayers = await tx.matchPlayer.findMany({
+                where: { matchId: matchId },
+                include: {
+                    player: true
+                }
+            });
+
             // Reverse the stats for each player
-            for (const matchPlayer of match.players) {
+            for (const matchPlayer of matchPlayers) {
                 const isWhiteTeam = matchPlayer.team;
                 
                 const updateData = {
-                gamellesScored: { decrement: matchPlayer.gamellesScored },
-                ownGoalsScored: { decrement: matchPlayer.ownGoalsScored }
+                    gamellesScored: { decrement: matchPlayer.gamellesScored || 0 },
+                    ownGoalsScored: { decrement: matchPlayer.ownGoalsScored || 0 }
                 };
                 
                 // Reverse goals scored/conceded based on team
                 if (isWhiteTeam) {
-                updateData.goalsScoredWhite = { decrement: match.whiteTeamScore };
-                updateData.goalsConcededWhite = { decrement: match.blackTeamScore };
+                    updateData.goalsScoredWhite = { decrement: match.whiteTeamScore || 0 };
+                    updateData.goalsConcededWhite = { decrement: match.blackTeamScore || 0 };
                 } else {
-                updateData.goalsScoredBlack = { decrement: match.blackTeamScore };
-                updateData.goalsConcededBlack = { decrement: match.whiteTeamScore };
+                    updateData.goalsScoredBlack = { decrement: match.blackTeamScore || 0 };
+                    updateData.goalsConcededBlack = { decrement: match.whiteTeamScore || 0 };
                 }
                 
                 // Reverse player of the match count
                 if (matchPlayer.isPlayerOfTheMatch) {
-                updateData.playerOfTheMatch = { decrement: 1 };
+                    updateData.playerOfTheMatch = { decrement: 1 };
                 }
                 
                 await tx.player.update({
-                where: { id: matchPlayer.playerId },
-                data: updateData
+                    where: { id: matchPlayer.playerId },
+                    data: updateData
                 });
             }
 
             // Delete the match (MatchPlayer entries are deleted automatically due to CASCADE)
             await tx.match.delete({
-                where: { id: parseInt(id) },
-                data: updateData
+                where: { id: matchId }
             });
         });
 
         res.status(204).send();
+
     } catch (error) {
-        if (error.message === 'Match not found' || error.code === 'P2025') {
+        console.error('Error deleting match:', error);
+
+        if (error.message === 'Match not found' || error.message === 'Match not found in transaction' || error.code === 'P2025') {
             return res.status(404).json({ error: 'Match not found' });
         }
+
+        console.error('Full error details:', {
+            message: error.message,
+            code: error.code,
+            stack: error.stack
+        });
+
         throw error;
     }
 }));

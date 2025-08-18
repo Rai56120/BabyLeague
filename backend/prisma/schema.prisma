@@ -16,7 +16,7 @@ datasource db {
 
 model Player {
   id                  Int           @id @default(autoincrement())
-  name                String
+  name                String        @unique
   createdAt           DateTime      @default(now())
   goalsConcededWhite  Int           @default(0)
   goalsConcededBlack  Int           @default(0)

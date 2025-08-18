@@ -5,6 +5,7 @@ import AddMatchPage from './pages/AddMatchPage';
 import MatchDetailsPage from './pages/MatchDetailsPage';
 import PlayerStatsPage from './pages/PlayerStatsPage';
 import RecentMatchesPage from './pages/RecentMatchesPage';
+import RankingPage from './pages/RankingPage';
 import './App.css';
 
 function App() {
@@ -14,12 +15,17 @@ function App() {
         <nav className="navbar">
           <div className="nav-container">
             <Link to="/" className="nav-logo">
-              ⚽ Table Football
+              ⚽ BabyLeague
             </Link>
             <ul className="nav-menu">
               <li className="nav-item">
                 <Link to="/" className="nav-link">
                   Recent Matches
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link to="/view-ranking" className="nav-link">
+                  View ranking
                 </Link>
               </li>
               <li className="nav-item">
@@ -43,11 +49,9 @@ function App() {
             <Route path="/add-match" element={<AddMatchPage />} />
             <Route path="/match/:id" element={<MatchDetailsPage />} />
             <Route path="/player/:id" element={<PlayerStatsPage />} />
+            <Route path="/view-ranking" element={<RankingPage />} />
           </Routes>
         </main>
-      </div>
-      <div>
-        Hello wrld
       </div>
     </Router>
   );
