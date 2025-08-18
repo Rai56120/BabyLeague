@@ -174,7 +174,7 @@ app.get('/api/matches/:id', asyncHandler(async (req, res) => {
 // Create new match with players and update players stats
 app.post('/api/matches', asyncHandler(async (req, res) => {
     console.log(`============== Match creation ==============`);
-    
+
     const { whiteTeamScore, blackTeamScore, players, date } = req.body;
 
     const isInvalidScore = (score) => score === undefined || score === null || typeof score !== 'number';
@@ -204,6 +204,9 @@ app.post('/api/matches', asyncHandler(async (req, res) => {
             isPlayerOfTheMatch: player.isPlayerOfTheMatch || false
         }));
 
+        console.log('matchPlayerData');
+        console.log(matchPlayerData);
+
         await tx.matchPlayer.createMany({
             data: matchPlayerData
         });
@@ -229,7 +232,9 @@ app.post('/api/matches', asyncHandler(async (req, res) => {
             }
 
             // Update player of the match count
-
+            if (player.isPlayerOfTheMatch) {
+                updateData.playerOfTheMatch = { increment: 1 };
+            }
 
             await tx.player.update({
                 where: { id: player.playerId },
