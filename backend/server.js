@@ -52,7 +52,7 @@ app.get('/api/players', asyncHandler(async (req, res) => {
     res.json(players);
 }));
 
-// Get a player by name
+// Get a player by id
 app.get('/api/players/:id', asyncHandler(async (req, res) => {
     const { id } = req.params;
     const players = await prisma.player.findUnique({
@@ -77,14 +77,27 @@ app.get('/api/players/:id', asyncHandler(async (req, res) => {
 app.post('/api/players', asyncHandler(async (req, res) => {
     const { name } = req.body;
     // We verify that there is a name 
-    if (!name) {
-        return res.status(400).json({ error: 'Player not found' });
+    if (!name || name.trim() === '') {
+        return res.status(400).json({ error: 'Player name is required' });
     }
-    const player = await prisma.player.create({
-        data: { name }
-    })
+    try {
+        const player = await prisma.player.create({
+            data: { name: name.trim() }
+        });
 
-    res.status(201).json(player);
+        res.status(201).json(player);
+    } catch (error) {
+        if (error.code === 'P2002') {
+            return res.status(409).json({
+                error: 'A player with this name already exists',
+                field: 'name'
+            });
+        }
+
+        throw error;
+    }
+    
+
 }));
 
 // Update an existing player fields
@@ -92,6 +105,10 @@ app.put('/api/players/:id', asyncHandler(async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
     
+    if (updateData.name) {
+        updateData.name = updateData.name.trim();
+    }
+
     try {
         const player = await prisma.player.update({
             where: { id: parseInt(id) },
@@ -99,7 +116,13 @@ app.put('/api/players/:id', asyncHandler(async (req, res) => {
         });
         res.json(player);
     } catch (error) {
-        if (error.code('P2025')) {
+        if (error.code === 'P2002') {
+            return res.status(409).json({
+                error: 'A player with this name already exists',
+                field: 'name'
+            });
+        }
+        if (error.code === 'P2025') {
             return res.status(404).json({ error: 'Player not found' });
         }
 
@@ -173,7 +196,6 @@ app.get('/api/matches/:id', asyncHandler(async (req, res) => {
 
 // Create new match with players and update players stats
 app.post('/api/matches', asyncHandler(async (req, res) => {
-    console.log(`============== Match creation ==============`);
 
     const { whiteTeamScore, blackTeamScore, players, date } = req.body;
 
@@ -203,9 +225,6 @@ app.post('/api/matches', asyncHandler(async (req, res) => {
             ownGoalsScored: player.ownGoalsScored || 0,
             isPlayerOfTheMatch: player.isPlayerOfTheMatch || false
         }));
-
-        console.log('matchPlayerData');
-        console.log(matchPlayerData);
 
         await tx.matchPlayer.createMany({
             data: matchPlayerData
@@ -294,7 +313,6 @@ app.put('/api/matches/:id', asyncHandler(async (req, res) => {
 
 // Delete match and update player stats
 app.delete('/api/matches/:id', asyncHandler(async (req, res) => {
-    console.log(`============== match delete function ==============`)
     const { id } = req.params;
     const matchId = parseInt(id);
 
@@ -314,8 +332,6 @@ app.delete('/api/matches/:id', asyncHandler(async (req, res) => {
                 throw new Error('Match not found');
             }
 
-            console.log('Match found:', { id: match.id, whiteScore: match.whiteTeamScore, blackScore: match.blackTeamScore });
-
             // Get players separately to avoid the function issue
             const matchPlayers = await tx.matchPlayer.findMany({
                 where: { matchId: matchId },
@@ -323,8 +339,6 @@ app.delete('/api/matches/:id', asyncHandler(async (req, res) => {
                     player: true
                 }
             });
-
-            console.log(`Found ${matchPlayers.length} players for this match`);
 
             // Reverse the stats for each player
             for (const matchPlayer of matchPlayers) {
@@ -349,8 +363,6 @@ app.delete('/api/matches/:id', asyncHandler(async (req, res) => {
                     updateData.playerOfTheMatch = { decrement: 1 };
                 }
                 
-                console.log(`Updating player ${matchPlayer.playerId} with:`, updateData);
-                
                 await tx.player.update({
                     where: { id: matchPlayer.playerId },
                     data: updateData
@@ -361,8 +373,6 @@ app.delete('/api/matches/:id', asyncHandler(async (req, res) => {
             await tx.match.delete({
                 where: { id: matchId }
             });
-            
-            console.log(`Match ${matchId} and ${matchPlayers.length} related records deleted successfully`);
         });
 
         res.status(204).send();
