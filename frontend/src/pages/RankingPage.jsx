@@ -197,10 +197,10 @@ const RankingPage = () => {
                                                     <span>W/L: {statsMatches.ratio}</span>
                                                 )}
                                                 {sortField === 'goalRatio' && (
-                                                    <span>Goals: {statsGoals.ratio}</span>
+                                                    <span>Goals ratio: {statsGoals.ratio}</span>
                                                 )}
                                                 {sortField === 'manOfTheMatch' && (
-                                                    <span>MOTM: {playerOfTheMatch}</span>
+                                                    <span>Man of the match: {playerOfTheMatch}</span>
                                                 )}
                                                 {sortField === 'gamelles' && (
                                                     <span>Gamelles: {gamellesScored}</span>

@@ -246,22 +246,22 @@ const MatchDetailsPage = () => {
                             <div className="grid grid-2" style={{ gap: '0.5rem' }}>
                                 <div className="stat-item" style={{ padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
                                     <span className="stat-label">Goals Scored:</span>
-                                    <span className="stat-value">{match.whiteTeamScore}</span>
+                                    <span className="stat-value" style={{ minWidth: '5rem' }}>{match.whiteTeamScore}</span>
                                 </div>
 
                                 <div className="stat-item" style={{ padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
                                     <span className="stat-label">Goals Conceded:</span>
-                                    <span className="stat-value">{match.blackTeamScore}</span>
+                                    <span className="stat-value" style={{ minWidth: '5rem' }}>{match.blackTeamScore}</span>
                                 </div>
 
                                 <div className="stat-item" style={{ padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
                                     <span className="stat-label">Gamelles:</span>
-                                    <span className="stat-value">{matchPlayer.gamellesScored}</span>
+                                    <span className="stat-value" style={{ minWidth: '5rem' }}>{matchPlayer.gamellesScored}</span>
                                 </div>
 
                                 <div className="stat-item" style={{ padding: '0.5rem 0', borderBottom: '1px solid #eee' }}>
                                     <span className="stat-label">Own Goals:</span>
-                                    <span className="stat-value">{matchPlayer.ownGoalsScored}</span>
+                                    <span className="stat-value" style={{ minWidth: '5rem' }}>{matchPlayer.ownGoalsScored}</span>
                                 </div>
                             </div>
                         </div>
@@ -297,22 +297,22 @@ const MatchDetailsPage = () => {
                             <div className="grid grid-2" style={{ gap: '0.5rem' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #6c757d' }}>
                                     <span style={{ color: '#ccc' }}>Goals Scored:</span>
-                                    <span style={{ color: 'white', fontWeight: 'bold' }}>{match.blackTeamScore}</span>
+                                    <span style={{ color: 'white', fontWeight: 'bold', minWidth: '5rem' }}>{match.blackTeamScore}</span>
                                 </div>
 
                                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #6c757d' }}>
                                     <span style={{ color: '#ccc' }}>Goals Conceded:</span>
-                                    <span style={{ color: 'white', fontWeight: 'bold' }}>{match.whiteTeamScore}</span>
+                                    <span style={{ color: 'white', fontWeight: 'bold', minWidth: '5rem' }}>{match.whiteTeamScore}</span>
                                 </div>
 
                                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #6c757d' }}>
                                     <span style={{ color: '#ccc' }}>Gamelles:</span>
-                                    <span style={{ color: 'white', fontWeight: 'bold' }}>{matchPlayer.gamellesScored}</span>
+                                    <span style={{ color: 'white', fontWeight: 'bold', minWidth: '5rem' }}>{matchPlayer.gamellesScored}</span>
                                 </div>
 
                                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #6c757d' }}>
                                     <span style={{ color: '#ccc' }}>Own Goals:</span>
-                                    <span style={{ color: 'white', fontWeight: 'bold' }}>{matchPlayer.ownGoalsScored}</span>
+                                    <span style={{ color: 'white', fontWeight: 'bold', minWidth: '5rem' }}>{matchPlayer.ownGoalsScored}</span>
                                 </div>
                             </div>
                         </div>
