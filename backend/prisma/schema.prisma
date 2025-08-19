@@ -47,7 +47,7 @@ model MatchPlayer {
   id                  Int    @id @default(autoincrement())
   matchId             Int
   playerId            Int
-  team                Boolean
+  team                Boolean //false: black    true: white
   gamellesScored      Int
   ownGoalsScored      Int
   isPlayerOfTheMatch  Boolean
