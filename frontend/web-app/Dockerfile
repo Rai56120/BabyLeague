@@ -1,6 +1,6 @@
 FROM node:18-alpine
 
-WORKDIR /app
+WORKDIR /BabyLeague
 
 # Copy package files first (for better caching)
 COPY package*.json ./
