@@ -6,13 +6,13 @@ import { PrismaClient } from './generated/prisma/index.js';
 dotenv.config();                                                // Load variales from .env to process.env
 const app = express();                                          // Create a Express app instance
 const prisma = new PrismaClient();                              // Create a prisma client to connect to the DB
-const PORT = process.env.BACKEND_PORT || 5000;
+const PORT = 3001;
 
 // --------------------------------------------------
 // ------------------- Middleware -------------------
 // --------------------------------------------------
 app.use(cors({      // Cors allows the communication between frontend and backend
-    origin: process.env.FRONTEND_URL + process.env.FRONTEND_PORT || 'http://localhost:5173/',
+    origin: process.env.REACT_APP_API_URL,
     credentials: true
 }));
 
@@ -517,7 +517,7 @@ app.use((req, res) => {
 app.listen(process.env.BACKEND_PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🌐 CORS origin: ${process.env.FRONTEND_URL + process.env.FRONTEND_PORT || 'http://localhost:3000'}`);
+    console.log(`🌐 CORS origin: ${process.env.REACT_APP_API_URL}`);
 
     if (process.env.NODE_ENV === 'development') {
         console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
